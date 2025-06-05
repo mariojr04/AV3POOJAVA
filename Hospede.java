@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +12,6 @@ public class Hospede extends Pessoa{
     private String rg;
     private Boolean fidelidade;
     List<Hospede> hospedes = new ArrayList<>();
-    private static final String FILE_PATH = "hospedes.txt";
 
     public Hospede(String cpf, String nome, int idade, String rg, Boolean fidelidade){
         super(cpf, nome, idade);
@@ -46,17 +47,12 @@ public class Hospede extends Pessoa{
 
     @Override
     public Boolean Inserir() {
-        try {
-            for (Hospede h : hospedes) {
-                if (h.getNome().equalsIgnoreCase(this.getNome())) {
-                    System.out.println("hospede já cadastrado: " + this.getNome());
-                    return false;
-                }
-            }
-            hospedes.add(this);
+        try (FileWriter fw = new FileWriter("hospedes.txt", true);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(this.toString() + "\n");
             return true;
-        } catch (Exception e) {
-            System.out.println("Erro inesperado: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Erro ao inserir hóspede: " + e.getMessage());
             return false;
         }
     }
@@ -80,24 +76,25 @@ public class Hospede extends Pessoa{
         return true;
     }
 
-    public List<Hospede> Listar() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+    public ArrayList<Hospede> listar() {
+        ArrayList<Hospede> lista = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("hospedes.txt"))) {
             String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] partes = linha.split(";");
+            while ((linha = br.readLine()) != null) {
+                String[] partes = linha.split(", ");
                 if (partes.length == 5) {
-                    String cpf = partes[0];
-                    String nome = partes[1];
-                    int idade = Integer.parseInt(partes[2]);
-                    String rg = partes[3];
-                    Boolean fidelidade = Boolean.parseBoolean(partes[4]);
-                    hospedes.add(new Hospede(cpf, nome, idade, rg, fidelidade ));
+                    String cpf = partes[0].split(": ")[1];
+                    String nome = partes[1].split(": ")[1];
+                    int idade = Integer.parseInt(partes[2].split(": ")[1]);
+                    String rg = partes[3].split(": ")[1];
+                    Boolean fidelidade = Boolean.parseBoolean(partes[4].split(": ")[1]);
+                    lista.add(new Hospede(cpf, nome, idade, rg, fidelidade));
                 }
             }
         } catch (IOException e) {
-            System.out.println("Erro ao ler produtos: " + e.getMessage());
+            System.out.println("Erro ao listar hóspedes: " + e.getMessage());
         }
-        return hospedes;
+        return lista;
     }
 
     public Hospede Consultar(int id) {
