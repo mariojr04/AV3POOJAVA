@@ -10,8 +10,6 @@ import java.util.Scanner;
 public class Funcionario extends Pessoa{
 
     private String funcao;
-    List<Funcionario> funcionarios = new ArrayList<>();
-    private static final String FILE_PATH = "funcionarios.txt";
 
     public Funcionario(String cpf, String nome, int idade, String funcao){
         super(cpf, nome, idade);
@@ -25,14 +23,6 @@ public class Funcionario extends Pessoa{
         return funcao;
     }
 
-    public static void SalvarFuncionario(Funcionario funcionario) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH, true))) {
-            writer.write(funcionario.getCpf() + ";" + funcionario.getNome() + ";" + funcionario.getIdade() + ";" + funcionario.getFuncao() );
-            writer.newLine();
-        } catch (IOException e) {
-            System.out.println("Erro ao salvar produto: " + e.getMessage());
-        }
-    }
     @Override
     public void ToString(){
         System.out.println("CPF: " + getCpf());
@@ -44,17 +34,12 @@ public class Funcionario extends Pessoa{
 
     @Override
     public Boolean Inserir() {
-        try {
-            for (Funcionario f : funcionarios) {
-                if (f.getNome().equalsIgnoreCase(this.getNome())) {
-                    System.out.println("Funcionário já cadastrado: " + this.getNome());
-                    return false;
-                }
-            }
-            funcionarios.add(this);
+        try (FileWriter fw = new FileWriter("funcionarios.txt", true);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(this.toString() + "\n");
             return true;
-        } catch (Exception e) {
-            System.out.println("Erro inesperado: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Erro ao inserir funcionário: " + e.getMessage());
             return false;
         }
     }
@@ -78,26 +63,27 @@ public class Funcionario extends Pessoa{
         return true;
     }
 
-    public List<Funcionario> Listar() {
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+     public ArrayList<Funcionario> listar() {
+        ArrayList<Funcionario> lista = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("funcionarios.txt"))) {
             String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] partes = linha.split(";");
+            while ((linha = br.readLine()) != null) {
+                String[] partes = linha.split(", ");
                 if (partes.length == 4) {
-                    String cpf = partes[0];
-                    String nome = partes[1];
-                    int idade = Integer.parseInt(partes[2]);
-                    String funcao = partes[3];
-                    funcionarios.add(new Funcionario(cpf, nome, idade, funcao ));
+                    String cpf = partes[0].split(": ")[1];
+                    String nome = partes[1].split(": ")[1];
+                    int idade = Integer.parseInt(partes[2].split(": ")[1]);
+                    String funcao = partes[3].split(": ")[1];
+                    lista.add(new Funcionario(cpf, nome, idade, funcao));
                 }
             }
         } catch (IOException e) {
-            System.out.println("Erro ao ler produtos: " + e.getMessage());
+            System.out.println("Erro ao listar: " + e.getMessage());
         }
-        return funcionarios;
+        return lista;
     }
 
+    List<Funcionario> funcionarios = new ArrayList<>();
     public Funcionario Consultar(int id) {
         if (id >= 0 && id < funcionarios.size()) {
             return funcionarios.get(id);
