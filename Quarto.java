@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +12,7 @@ public class Quarto{
     private int idQuarto;
     private String descQuarto;
     List<Quarto> quartos = new ArrayList<>();
-    private static final String FILE_PATH = "quartos.txt";
+    
 
     public Quarto(int idQuarto, String descQuarto){
         this.idQuarto = idQuarto;
@@ -38,18 +40,13 @@ public class Quarto{
         System.out.println("Desc do quarto: " + getDescQuarto());
     }
     
-    public Boolean Inserir() {
-        try {
-            for (Quarto q : quartos) {
-                if (q.getIdQuarto() == this.getIdQuarto()) {
-                    System.out.println("Quarto já ocupado: " + this.getIdQuarto());
-                    return false;
-                }
-            }
-            quartos.add(this);
+     public Boolean inserir() {
+        try (FileWriter fw = new FileWriter("quartos.txt", true);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(this.toString() + "\n");
             return true;
-        } catch (Exception e) {
-            System.out.println("Erro inesperado: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Erro ao inserir quarto: " + e.getMessage());
             return false;
         }
     }
@@ -64,21 +61,17 @@ public class Quarto{
         return true;
     }
 
-    public List<Quarto> Listar() {
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
+    public ArrayList<Quarto> Listar() {
+        ArrayList<Quarto> lista = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("quartos.txt"))) {
             String linha;
-            while ((linha = reader.readLine()) != null) {
-                String[] partes = linha.split(";");
-                if (partes.length == 2) {
-                    int idQuarto = Integer.parseInt(partes[0]);
-                    String descQuarto = partes[1];
-                    quartos.add(new Quarto(idQuarto, descQuarto));
-                }
+            while ((linha = br.readLine()) != null) {
+                System.out.println(linha);
             }
         } catch (IOException e) {
-            System.out.println("Erro ao ler produtos: " + e.getMessage());
+            System.out.println("Erro ao listar: " + e.getMessage());
         }
-        return quartos;
+        return lista;
     }
 
     public Quarto Consultar(int id) {
